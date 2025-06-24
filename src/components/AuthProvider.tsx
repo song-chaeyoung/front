@@ -12,29 +12,32 @@ const AuthProvider = ({
   initialAuth: boolean;
   children: ReactNode;
 }) => {
-  const { setIsAuthenticated, logout } = useAuthStore();
+  const { setIsAuthenticated } = useAuthStore();
   const pathname = usePathname();
 
   useEffect(() => {
     setIsAuthenticated(initialAuth);
-  }, [initialAuth, setIsAuthenticated]);
+    /* eslint-disable */
+  }, [initialAuth]);
 
   useEffect(() => {
-    if (!initialAuth) return;
-
-    const checkAuthOnRouteChange = async () => {
+    const checkAuthStatus = async () => {
       try {
         const result = await getAuthMy();
-        if (result.result.shouldLogout) {
-          logout();
+
+        if (result.error || result.status === 401) {
+          setIsAuthenticated(false);
+        } else if (result.result) {
+          setIsAuthenticated(true);
         }
       } catch (error) {
-        console.error("인증 확인 실패:", error);
+        console.log(error);
+        setIsAuthenticated(false);
       }
     };
 
-    checkAuthOnRouteChange();
-  }, [pathname, initialAuth, logout]);
+    checkAuthStatus();
+  }, [pathname, setIsAuthenticated]);
 
   return <>{children}</>;
 };

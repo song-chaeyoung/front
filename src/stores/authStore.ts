@@ -8,7 +8,8 @@ interface AuthStore {
 
 const useAuthStore = create<AuthStore>((set) => ({
   isAuthenticated: false,
-  setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
+  setIsAuthenticated: (isAuthenticated) =>
+    set({ isAuthenticated: isAuthenticated }),
   logout: () => {
     set({ isAuthenticated: false });
     window.location.href = "/login";

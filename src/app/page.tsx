@@ -1,10 +1,8 @@
-import React from "react";
-import Pagination from "@/components/common/Pagination";
+import {redirect} from "next/navigation";
 
 const Page = () => {
-  return <div className="flex-center h-screen">
-    <Pagination lastPage={20}/>
-  </div>;
+    redirect('/main');
+    return null;
 };
 
 export default Page;

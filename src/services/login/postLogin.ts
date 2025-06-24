@@ -44,7 +44,7 @@ export const postLogin = async (formData: PostLoginData) => {
     }
 
     const result = await res.text();
-    return result;
+    return { result, accessToken };
   } catch (err) {
     console.log("Error details:", err);
     throw err instanceof Error ? err : new Error("로그인 실패");

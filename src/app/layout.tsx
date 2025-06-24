@@ -27,6 +27,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
   const initialAuth = !!token;
+
   return (
     <html lang="ko">
       <body className={`antialiased ${pretendard.className}`}>

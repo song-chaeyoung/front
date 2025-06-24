@@ -41,7 +41,6 @@ const LoginForm = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     if (!isValid) return;
-    // console.log("Login:", data);
 
     login(data, {
       onSuccess: () => {
