@@ -2,11 +2,12 @@
 
 import React from 'react';
 import Icon from "@/Icons/Icon";
+import useAuthStore from "@/stores/authStore";
 
 const LogoutButton = () => {
-
+    const { logout } = useAuthStore();
     const onLogout = () => {
-        // TODO: 로그아웃
+        logout();
     }
 
     return (

@@ -4,6 +4,7 @@ import React, { ReactNode, useEffect } from "react";
 import useAuthStore from "@/stores/authStore";
 import { usePathname } from "next/navigation";
 import { getAuthMy } from "@/services/auth/getAuthMy";
+import useMyInfoStore from "@/stores/myInfoStore";
 
 const AuthProvider = ({
   initialAuth,
@@ -13,6 +14,7 @@ const AuthProvider = ({
   children: ReactNode;
 }) => {
   const { setIsAuthenticated } = useAuthStore();
+  const {setMyInfo} = useMyInfoStore();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -29,6 +31,7 @@ const AuthProvider = ({
           setIsAuthenticated(false);
         } else if (result.result) {
           setIsAuthenticated(true);
+          setMyInfo(result.result);
         }
       } catch (error) {
         console.log(error);

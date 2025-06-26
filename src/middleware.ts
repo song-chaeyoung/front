@@ -43,7 +43,7 @@ export function middleware(req: NextRequest) {
   const isAuthPath = authPaths.some((path) => pathname.startsWith(path));
 
   if (isAuthenticated && isAuthPath) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/main", req.url));
   }
 
   if (!isAuthenticated && isProtectedPath) {

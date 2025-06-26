@@ -6,19 +6,20 @@ import FormLabelTextInput from "@/components/common/form/FormLabelTextInput";
 import CustomButton from "@/components/common/CustomButton";
 import CustomIcon from "@/Icons";
 import Button from "@/components/common/Button";
-import {useGetMyPageUserInfo} from "@/hooks/fetcher/myPage/useGetMyPageUserInfo";
 import {useGetGames} from "@/hooks/fetcher/game/useGetGames";
 import {useRouter} from "next/navigation";
 import {GameList} from "@/_types/game/game";
-import {MyPageUserInfoRequest} from "@/services/myPage/postMyPageUserInfo";
+import {AuthMyRequest} from "@/services/myPage/postAuthMy";
 import {DropdownType} from "@/components/common/Dropdown";
 import {useEffect} from "react";
 import FormLabelPasswordInput from "@/components/common/form/FormLabelPasswordInput";
 import FormLabelMultiInput from "../common/form/FormLabelMultiInput";
 import FormLabelDropdown from "@/components/common/form/FormLabelDropdown";
-import {usePostMyPageUserInfo} from "@/hooks/fetcher/myPage/usePostMyPageUserInfo";
+import {usePostAuthMy} from "@/hooks/fetcher/myPage/usePostAuthMy";
+import {useGetAuthMy} from "@/hooks/fetcher/auth/useGetAuthMy";
+import useMyInfoStore from "@/stores/myInfoStore";
 
-interface MyPageUserInfoFormData extends Omit<MyPageUserInfoRequest, 'phoneNumber' | 'birthDate' | 'favoriteGame'> {
+interface AuthMyFormData extends Omit<AuthMyRequest, 'phoneNumber' | 'birthDate' | 'favoriteGame'> {
     phoneNumber: {
         first: string;
         middle: string;
@@ -34,16 +35,17 @@ interface MyPageUserInfoFormData extends Omit<MyPageUserInfoRequest, 'phoneNumbe
 
 
 const MyPageForm = () => {
-    const {data: userInfo} = useGetMyPageUserInfo();
+    const {data: userInfo} = useGetAuthMy();
     const {data: gamesData} = useGetGames();
+    const {setMyInfo} = useMyInfoStore();
     const router = useRouter();
     const gameDropdown = ((gamesData?.result ?? []) as GameList)
         .map(({name, id}) => ({
             label: name,
             value: id.toString()
         }));
-    const form = useForm<MyPageUserInfoFormData>({mode: "onChange"});
-    const {mutate: submit} = usePostMyPageUserInfo();
+    const form = useForm<AuthMyFormData>({mode: "onChange"});
+    const {mutate: submit} = usePostAuthMy();
     const {isValid, isDirty} = form.formState;
     const buttonDisabled = !isValid || !isDirty;
 
@@ -74,16 +76,18 @@ const MyPageForm = () => {
                     }))
                     .find(game => game.label === favoriteGame)
             });
+
+            setMyInfo(userInfo.result);
         }
     }, [userInfo, gamesData]);
 
-    const onSubmit = (data: MyPageUserInfoFormData) => {
+    const onSubmit = (data: AuthMyFormData) => {
         const request = {
             ...data,
             phoneNumber: `${data.phoneNumber.first}-${data.phoneNumber.middle}-${data.phoneNumber.last}`,
             birthDate: `${data.birthDate.year}-${data.birthDate.month}-${data.birthDate.year}`,
             favoriteGame: data.favoriteGame.label
-        } as MyPageUserInfoRequest;
+        } as AuthMyRequest;
 
         submit(request, {
             onSuccess: () => {

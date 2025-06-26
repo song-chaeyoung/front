@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import ChatModal from "./ChatModal";
+import { ChatModal } from "./ChatModal";
 import { useChatModalStore } from "@/stores/chatModalStore";
 
 const ChatModalWrapper = () => {
-  const { isOpen } = useChatModalStore();
+  const { isOpen, close } = useChatModalStore();
 
   if (!isOpen) return null;
 
-  return <ChatModal />;
+  return <ChatModal isOpen={isOpen} onClose={close} />;
 };
 
 export default ChatModalWrapper;

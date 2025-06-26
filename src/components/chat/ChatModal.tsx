@@ -1,440 +1,376 @@
 "use client";
 
-import { useState } from "react";
-import Button from "../common/Button";
+import { useState, useEffect, useRef } from "react";
+import Button from "@/components/common/Button";
+import CommonInput from "@/components/common/input/CommonInput";
+import ProfileImage from "@/components/common/ProfileImage";
+import { ModalPortal } from "@/components/common/Portal";
+import CustomIcon from "@/Icons/Icon";
 
-interface Message {
-  type: "sent" | "received";
-  text: string;
-  time: string;
+interface ChatMessage {
+  id: number;
+  sender: "me" | "opponent";
+  content: string;
+  timestamp: string;
 }
 
-interface ChatInfo {
-  title: string;
-  subtitle: string;
-  category: "ITEM" | "ACCOUNT";
-  unreadCount: number | string | null;
-  messages: Message[];
+interface ChatListItem {
+  chatId: number;
+  auctionId: number;
+  bidId: number;
+  opponentNickname: string;
+  gameTitle: string;
+  auctionTitle: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  isNewMessage: boolean;
 }
 
-interface ChatData {
-  tabs: string[];
-  messages: {
-    구매: Record<number, ChatInfo>;
-    판매: Record<number, ChatInfo>;
-  };
+interface ChatDetail {
+  chatId: number;
+  auctionId: number;
+  bidId: number;
+  auctionTitle: string;
+  opponentNickname: string;
+  isSeller: boolean;
+  canRequestPayment: boolean;
+  messages: ChatMessage[];
 }
 
-const ChatModal = () => {
-  const chatData: ChatData = {
-    tabs: ["구매", "판매"],
-    messages: {
-      구매: {
-        0: {
-          title: "메이플스토리 뇌전수리검 팔아요",
-          subtitle: "아이템 판매",
-          category: "ITEM",
-          unreadCount: null,
-          messages: [
-            {
-              type: "sent",
-              text: "안녕하세요! 방금 뇌전 수리검 다량발주 구매자입니다 :) 아이템 전달 가능하신 시간 여쭤보고자 연락드렸어요.",
-              time: "2025.05.25 16:32",
-            },
-            {
-              type: "received",
-              text: "안녕하세요~ 네, 지금 바로 전달 가능하고 게임 접속도 준비해 있어요. 캐릭터 알려주시면 이동할게요!",
-              time: "2025.05.25 16:35",
-            },
-          ],
-        },
-        1: {
-          title: "리니지 데포로우 계정 구매",
-          subtitle: "계정 판매",
-          category: "ACCOUNT",
-          unreadCount: 4,
-          messages: [
-            {
-              type: "received",
-              text: "안녕하세요! 리니지 데포로우 계정 판매합니다. 레벨 85, 풀템 계정이에요.",
-              time: "2025.05.25 14:20",
-            },
-            {
-              type: "sent",
-              text: "가격이 어떻게 되나요? 그리고 계정 이전은 어떻게 진행되나요?",
-              time: "2025.05.25 14:25",
-            },
-            {
-              type: "received",
-              text: "가격은 50만원이고, 계정 이전은 이메일과 비밀번호 변경으로 진행됩니다.",
-              time: "2025.05.25 14:30",
-            },
-          ],
-        },
-        2: {
-          title: "세븐나이츠 리버스 아이템 구매",
-          subtitle: "아이템 판매",
-          category: "ITEM",
-          unreadCount: 3,
-          messages: [
-            {
-              type: "sent",
-              text: "세븐나이츠 리버스 아이템 구매하고 싶습니다. 어떤 아이템들 있나요?",
-              time: "2025.05.25 13:45",
-            },
-            {
-              type: "received",
-              text: "현재 전설급 무기와 방어구 세트 판매중입니다. 스크린샷 보내드릴게요!",
-              time: "2025.05.25 13:50",
-            },
-          ],
-        },
-        3: {
-          title: "로드나인 이그니션 아이템",
-          subtitle: "아이템 판매",
-          category: "ITEM",
-          unreadCount: null,
-          messages: [
-            {
-              type: "received",
-              text: "로드나인 레어 아이템 판매합니다. 관심 있으시면 연락주세요.",
-              time: "2025.05.25 12:15",
-            },
-            {
-              type: "sent",
-              text: "어떤 아이템인지 자세히 알 수 있을까요?",
-              time: "2025.05.25 12:20",
-            },
-          ],
-        },
-        4: {
-          title: "리니지 켄라우엘 무기 구매",
-          subtitle: "아이템 판매",
-          category: "ITEM",
-          unreadCount: 1,
-          messages: [
-            {
-              type: "sent",
-              text: "켄라우엘 무기 구매 문의드립니다. 아직 판매 가능한가요?",
-              time: "2025.05.25 11:30",
-            },
-            {
-              type: "received",
-              text: "네, 아직 판매 가능합니다. 가격은 30만원입니다.",
-              time: "2025.05.25 11:35",
-            },
-          ],
-        },
-      },
-      판매: {
-        0: {
-          title: "던전앤파이터 무기 판매",
-          subtitle: "아이템 판매",
-          category: "ITEM",
-          unreadCount: 2,
-          messages: [
-            {
-              type: "received",
-              text: "던파 무기 구매하고 싶습니다. 아직 판매 가능한가요?",
-              time: "2025.05.25 13:15",
-            },
-            {
-              type: "sent",
-              text: "네 아직 판매 가능합니다! 어떤 무기를 찾고 계신가요?",
-              time: "2025.05.25 13:18",
-            },
-          ],
-        },
-        1: {
-          title: "피파온라인4 선수카드 판매",
-          subtitle: "아이템 판매",
-          category: "ACCOUNT",
-          unreadCount: null,
-          messages: [
-            {
-              type: "sent",
-              text: "피파 선수카드 판매합니다. 메시, 호날두 등 레어카드 보유중이에요.",
-              time: "2025.05.25 12:30",
-            },
-            {
-              type: "received",
-              text: "메시 카드 가격이 어떻게 되나요?",
-              time: "2025.05.25 12:35",
-            },
-          ],
-        },
-        2: {
-          title: "배틀그라운드 스킨 판매",
-          subtitle: "아이템 판매",
-          category: "ITEM",
-          unreadCount: 7,
-          messages: [
-            {
-              type: "sent",
-              text: "배그 레어 스킨 여러개 판매합니다. 관심있으시면 연락주세요!",
-              time: "2025.05.25 11:45",
-            },
-            {
-              type: "received",
-              text: "어떤 스킨들이 있는지 리스트 좀 보여주실 수 있나요?",
-              time: "2025.05.25 11:50",
-            },
-            {
-              type: "sent",
-              text: "네, 잠시만요. 스크린샷 찍어서 보내드릴게요.",
-              time: "2025.05.25 11:52",
-            },
-          ],
-        },
-        3: {
-          title: "오버워치2 계정 판매",
-          subtitle: "계정 판매",
-          category: "ACCOUNT",
-          unreadCount: 1,
-          messages: [
-            {
-              type: "sent",
-              text: "오버워치2 다이아 계정 판매합니다. 모든 영웅 보유중입니다.",
-              time: "2025.05.25 10:20",
-            },
-            {
-              type: "received",
-              text: "계정 이전은 어떻게 진행되나요? 안전한가요?",
-              time: "2025.05.25 10:25",
-            },
-          ],
-        },
-        4: {
-          title: "롤 다이아 계정 판매",
-          subtitle: "계정 판매",
-          category: "ACCOUNT",
-          unreadCount: "99+",
-          messages: [
-            {
-              type: "sent",
-              text: "롤 다이아 계정 판매합니다. 모든 챔피언과 스킨 다수 보유!",
-              time: "2025.05.25 09:15",
-            },
-            {
-              type: "received",
-              text: "가격이 어떻게 되나요? 그리고 계정 상태는 어떤가요?",
-              time: "2025.05.25 09:20",
-            },
-            {
-              type: "sent",
-              text: "가격은 80만원이고, 계정 상태 매우 깨끗합니다. 제재 이력 전혀 없어요.",
-              time: "2025.05.25 09:25",
-            },
-          ],
-        },
-      },
+interface ChatModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  chatList?: ChatListItem[];
+  chatDetail?: ChatDetail;
+}
+
+export function ChatModal({
+  isOpen,
+  onClose,
+  chatList = [
+    {
+      chatId: 1,
+      auctionId: 500,
+      bidId: 1001,
+      opponentNickname: "thehd1",
+      gameTitle: "메이플스토리",
+      auctionTitle: "뇌전수리검 팔아요",
+      lastMessage: "넵, 확인되면 바로 전달 드릴게요 :)",
+      lastMessageTime: "2025.06.25 16:37",
+      isNewMessage: true,
     },
-  };
-
+    {
+      chatId: 2,
+      auctionId: 501,
+      bidId: 1002,
+      opponentNickname: "swordboy77",
+      gameTitle: "서버나이츠",
+      auctionTitle: "바론섭 3성 검 팝니다",
+      lastMessage: "거래 언제 가능하신가요?",
+      lastMessageTime: "2025.06.24 21:12",
+      isNewMessage: false,
+    },
+  ],
+  chatDetail = {
+    chatId: 1,
+    auctionId: 500,
+    bidId: 1001,
+    auctionTitle:
+      "메이플스토리 뇌전수리검 팔아요 메이플스토리 바론 메이플스토리 뇌전수리검 팔아요 메이플스토리 바론",
+    opponentNickname: "thehd1",
+    isSeller: false,
+    canRequestPayment: true,
+    messages: [
+      {
+        id: 1,
+        sender: "me",
+        content:
+          "안녕하세요! 방금 보고 관심 생겨서 연락드립니다 :) 아이템 전달 가능한 시간 대략적으로 알려주셔도 돼요.",
+        timestamp: "2025.06.25 16:32",
+      },
+      {
+        id: 2,
+        sender: "opponent",
+        content:
+          "안녕하세요~ 네, 지금 바로 전달 가능합니다! 게임 접속은 문제없어요. 캐릭명 말씀해주시면 이동할게요!",
+        timestamp: "2025.06.25 16:35",
+      },
+      {
+        id: 3,
+        sender: "me",
+        content:
+          "혹시 결제까지 미룰 수 없고 지금 진행 필요할까요? 12성/강화 여부 보니 +6정도라 살짝 고민되네요.",
+        timestamp: "2025.06.25 16:36",
+      },
+      {
+        id: 4,
+        sender: "opponent",
+        content: "넵, 확인되면 바로 전달 드릴게요 :)",
+        timestamp: "2025.06.25 16:37",
+      },
+      {
+        id: 5,
+        sender: "me",
+        content:
+          "혹시 결제까지 미룰 수 없고 지금 진행 필요할까요? 12성/강화 여부 보니 +6정도라 살짝 고민되네요.",
+        timestamp: "2025.06.25 16:36",
+      },
+      {
+        id: 6,
+        sender: "opponent",
+        content: "넵, 확인되면 바로 전달 드릴게요 :)",
+        timestamp: "2025.06.25 16:37",
+      },
+    ],
+  },
+}: ChatModalProps) {
+  const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
+  const [selectedChatId, setSelectedChatId] = useState(1);
   const [message, setMessage] = useState("");
-  const [activeTab, setActiveTab] = useState(chatData.tabs[0]);
-  const [activeChat, setActiveChat] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // const {} = u
 
-  const currentChatList = Object.entries(
-    chatData.messages[activeTab as keyof typeof chatData.messages] || {}
-  ).map(([id, chat]) => ({
-    id: parseInt(id),
-    name: chat.title,
-    category: chat.category,
-    count: chat.unreadCount,
-  }));
-
-  const currentMessages = chatData.messages[
-    activeTab as keyof typeof chatData.messages
-  ]?.[activeChat] || {
-    title: "채팅을 선택해주세요",
-    subtitle: "",
-    category: "아이템" as const,
-    unreadCount: null,
-    messages: [],
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView();
+    }, 10);
   };
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    setActiveChat(0); // 탭 변경시 첫 번째 채팅으로 리셋
-  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatDetail.messages]);
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [selectedChatId]);
+
+  if (!isOpen) return null;
 
   return (
-    <div className="w-screen h-screen bg-[rgba(8,8,8,0.8)] flex items-center justify-center fixed inset-0 z-[100]">
-      <div className="w-[80vw] h-[80vh] bg-bgGrayDepth3 flex rounded-md overflow-hidden shadow-[inset_0px_4px_60px_rgba(148,156,247,0.25)]l">
-        {/* Left Sidebar - Chat List */}
-        <div className="w-[260px] bg-bgGrayDepth2 flex flex-col gap-[24px]">
-          {/* Sidebar Header */}
-          <div className="pt-1.5 px-1 ">
-            <div className="flex items-center justify-between">
-              <span className="text-fgGrayDefault font-semibold leading-[1.4] tracking-[-0.36px] text-1.125">
-                채팅 목록
-              </span>
-              <div className="relative flex bg-fillGrayDefault rounded-max ">
-                {/* Sliding Background */}
-                <div
-                  className={`absolute top-0 bottom-1 w-[72px] h-[38px] bg-[#5865f2] rounded-full transition-transform duration-300 ease-in-out ${
-                    activeTab === "구매" ? "translate-x-0" : "translate-x-14"
-                  }`}
-                />
-
-                {/* Buttons */}
-                <button
-                  onClick={() => handleTabChange("구매")}
-                  className={`relative z-10 px-[24px] py-[10px] text-0.875 rounded-full transition-colors duration-300 ${
-                    activeTab === "구매"
-                      ? "text-white"
-                      : "text-fgGrayDisabled hover:text-white"
-                  }`}
-                >
-                  구매
-                </button>
-                <button
-                  onClick={() => handleTabChange("판매")}
-                  className={`relative z-10 px-[24px] py-[10px] text-0.875 rounded-full transition-colors duration-300 ${
-                    activeTab === "판매"
-                      ? "text-white"
-                      : "text-fgGrayDisabled hover:text-white"
-                  }`}
-                >
-                  판매
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Chat List */}
-          <div className="overflow-y-auto h-full scrollbar-dropdown">
-            {currentChatList.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => setActiveChat(chat.id)}
-                className={`flex items-center gap-[8px] p-[12px] cursor-pointer hover:bg-[#2e3035] border-b border-[#2e3035] transition-colors ${
-                  activeChat === chat.id ? "bg-[#2e3035]" : ""
-                }`}
-              >
-                <div className="w-10 h-10 bg-[#393c43] rounded-full flex items-center justify-center text-white text-sm">
-                  t
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-white text-sm truncate">{chat.name}</div>
-                  <div
-                    className={`text-0.75 font-medium ${
-                      chat.category === "ACCOUNT"
-                        ? "text-colorTypeAccount"
-                        : "text-colorTypeItem"
-                    }`}
-                  >
-                    {chat.category}
-                  </div>
-                </div>
-                {chat.count && (
-                  <span className="bg-fillPrimaryDefault text-fgPrimaryDefault text-0.75 py-[2px] px-[8px] rounded-[12px] flex-center h-fit font-medium leading-[1.4] tracking-[-0.24px]">
-                    {chat.count}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Side - Chat Interface */}
-        <div className="flex-1 flex flex-col px-[16px]">
-          {/* Chat Header */}
-          <div className="flex items-center justify-between py-[24px] border-b border-borderDivider">
-            <div className="flex items-center gap-[12px]">
-              <div className="w-10 h-10 bg-[#393c43] rounded-full flex items-center justify-center text-white text-sm">
-                t
-              </div>
-              <div>
-                <h2 className="text-fgGrayDefault text-1.5 font-semibold leading-[1.4] tracking-[-0.48px]">
-                  {currentMessages.title}
+    <ModalPortal title="chat-modal">
+      <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center ">
+        <div className="bg-bgGrayDepth3 rounded-xl w-[80vw] h-[80vh] flex overflow-hidden shadow-[inset_0px_4px_60px_0px_rgba(148,156,247,0.25)] relative ">
+          <div className="w-[260px] bg-bgGrayDepth2  flex flex-col">
+            <div className="px-1 py-1.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <h2 className="text-fgGrayDefault text-1.125 font-semibold tracking-[-0.36px]">
+                  채팅 목록
                 </h2>
-                {currentMessages.subtitle && (
-                  <p
-                    className={`text-1.124 leading-[1.4] tracking-[-0.36px ] ${
-                      currentMessages.category === "ACCOUNT"
-                        ? "text-colorTypeAccount"
-                        : "text-colorTypeItem"
+                <div className="flex bg-fillGrayDefault rounded-max h-[40px] relative ">
+                  <div
+                    className={`absolute top-0 bottom-0 bg-fillPrimaryDefault rounded-max transition-all duration-300 ease-in-out w-[calc(50%-2px)] ${
+                      activeTab === "buy" ? "left-0" : "left-[calc(50%+2px)]"
+                    }`}
+                  />
+
+                  <button
+                    onClick={() => setActiveTab("buy")}
+                    className={`relative z-10 px-1.5 py-0.625 text-0.875 font-semibold transition-colors tracking-[-0.28px] flex-1 ${
+                      activeTab === "buy"
+                        ? "text-fgPrimaryDefault"
+                        : "text-fgGrayDisabled hover:text-fgGrayDefault"
                     }`}
                   >
-                    {currentMessages.subtitle}
-                  </p>
-                )}
+                    구매
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("sell")}
+                    className={`relative z-10 px-[24px] py-0.625 text-0.875 font-semibold transition-colors tracking-[-0.28px] flex-1 ${
+                      activeTab === "sell"
+                        ? "text-fgPrimaryDefault"
+                        : "text-fgGrayDisabled hover:text-fgGrayDefault"
+                    }`}
+                  >
+                    판매
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex gap-[12px]">
-              <Button title="경매글 확인하기" variant="secondary" />
-              <Button title="닫기" variant="secondary" />
-            </div>
-          </div>
 
-          {/* Chat Messages Area */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="h-full flex flex-col justify-end space-y-3">
-              {currentMessages.messages.map((msg: Message, index: number) => (
-                <div
-                  key={index}
-                  className={`w-full flex ${
-                    msg.type === "sent" ? "justify-end" : "justify-start"
-                  }`}
-                >
+            <div className="flex-1 overflow-y-auto px-0.75">
+              {chatList.map((chat, index) => (
+                <div key={chat.chatId}>
                   <div
-                    className={`flex items-end gap-[10px]  ${
-                      msg.type === "sent"
-                        ? "flex-row-reverse space-x-reverse"
-                        : ""
+                    className={`p-0.75 rounded-lg cursor-pointer transition-colors ${
+                      selectedChatId === chat.chatId
+                        ? "bg-bgGrayDepth3"
+                        : "hover:bg-fillGrayDefault"
                     }`}
+                    onClick={() => setSelectedChatId(chat.chatId)}
                   >
-                    <div className="w-7 h-7 bg-[#393c43] rounded-full flex items-center justify-center text-white text-xs">
-                      t
-                    </div>
-                    <div
-                      className={`p-[16px] rounded-lg text-[14px] font-semibold leading-[1.3] tracking-[-0.28px] max-w-[360px] ${
-                        msg.type === "sent"
-                          ? "bg-fillPrimaryFocused text-white"
-                          : "bg-fillGrayFocused text-white"
-                      }`}
-                    >
-                      <p className="leading-relaxed">{msg.text}</p>
-                    </div>
-                    <div
-                      className={`text-xs opacity-70 text-nowrap ${
-                        msg.type === "sent" ? "text-right" : ""
-                      }`}
-                    >
-                      {msg.time}
+                    <div className="flex items-start gap-0.5">
+                      <ProfileImage
+                        nickname={chat.opponentNickname.charAt(0)}
+                        size="sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={`text-0.875 font-semibold truncate tracking-[-0.28px] leading-[1.4] ${
+                            selectedChatId === chat.chatId
+                              ? "text-fgGrayDefault"
+                              : "text-fgGrayDisabled"
+                          }`}
+                        >
+                          {chat.auctionTitle}
+                        </h3>
+                        <span className="text-0.75 tracking-[-0.24px] leading-[1.4] text-colorTypeItem">
+                          {chat.gameTitle}
+                        </span>
+                      </div>
+                      {chat.isNewMessage && (
+                        <div className="bg-fillPrimaryDefault rounded-xl px-0.5 py-0.25 min-w-[24px] h-[21px] flex items-center justify-center">
+                          <span className="text-0.75 font-medium text-fgPrimaryDefault tracking-[-0.24px]">
+                            N
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                  {index < chatList.length - 1 && (
+                    <hr className="border-borderDivider my-0.25" />
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Message Input Area */}
-          <div className="p-3 bg-[#28282d] border-t border-[#2e3035]">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="메시지를 입력하세요..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1 bg-[#393c43] border border-[#393c43] text-white placeholder-[#7c7c84] text-sm h-9 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5865f2]"
-              />
-              <button className="flex items-center px-3 py-2 text-xs text-[#cdcdcd] border border-[#393c43] bg-[#393c43] rounded-md hover:bg-[#2e3035] transition-colors">
-                {/* <Archive className="w-3 h-3 mr-1" /> */}
-                결제하기
-              </button>
-              <button className="flex items-center px-3 py-2 text-xs text-white bg-[#5865f2] rounded-md hover:bg-[#3f4999] transition-colors">
-                {/* <Send className="w-3 h-3 mr-1" /> */}
-                전송하기
-              </button>
+          <div className="flex-1 flex flex-col">
+            <div className="h-[109px] px-1 py-1.5 border-b border-borderDivider flex items-center">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-0.75">
+                  <ProfileImage
+                    nickname={chatDetail.opponentNickname.charAt(0)}
+                    size="sm"
+                  />
+                  <div>
+                    <h1 className="text-fgGrayDefault text-1.5 font-semibold truncate max-w-[300px] tracking-[-0.48px] leading-[1.4]">
+                      {chatDetail.auctionTitle}
+                    </h1>
+                    <div className="flex items-center gap-0.5 text-1.125 tracking-[-0.36px] leading-[1.4]">
+                      <span className="text-colorTypeItem">아이템 구매</span>
+                      <span className="text-fgGrayDefault">
+                        @{chatDetail.opponentNickname}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.75">
+                  <Button
+                    variant="secondary"
+                    title="경매글 확인하기"
+                    icon="left"
+                    customIcon={
+                      <CustomIcon
+                        icon="LINK_EXTERNAL"
+                        className="w-[24px] h-[24px]"
+                      />
+                    }
+                  />
+                  <Button
+                    variant="secondary"
+                    title="닫기"
+                    onClick={onClose}
+                    icon="left"
+                    customIcon={
+                      <CustomIcon
+                        icon="X_CIRCLE"
+                        className="w-[24px] h-[24px]"
+                      />
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 px-1 py-1 overflow-y-auto scrollbar-dropdown">
+              <div className="flex flex-col gap-[10px]">
+                {chatDetail.messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex  ${
+                      msg.sender === "me" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`flex items-end gap-[10px] max-w-[70%] ${
+                        msg.sender === "me" ? "flex-row-reverse" : "flex-row"
+                      } `}
+                    >
+                      <ProfileImage
+                        nickname={
+                          msg.sender === "me"
+                            ? ""
+                            : chatDetail.opponentNickname.charAt(0)
+                        }
+                        size="sm"
+                      />
+
+                      <div
+                        className={`px-1 py-1 rounded-lg max-w-[360px] ${
+                          msg.sender === "me"
+                            ? "bg-fillPrimaryFocused text-fgPrimaryDefault"
+                            : "bg-fillGrayFocused text-fgPrimaryDefault"
+                        }`}
+                      >
+                        <p className="text-0.875 font-semibold leading-relaxed tracking-[-0.28px]">
+                          {msg.content}
+                        </p>
+                      </div>
+
+                      <span className="text-0.75 text-fgGrayDefault tracking-[-0.24px] text-nowrap">
+                        {msg.timestamp}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Message Input */}
+            <div className="h-24 px-1 py-1.5 border-t border-borderDivider flex items-center">
+              <div className="flex items-center gap-0.5 w-full">
+                <div className="flex-1">
+                  <CommonInput
+                    value={message}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setMessage(e.target.value)
+                    }
+                    placeholder="메시지 보내기"
+                  />
+                </div>
+                <Button
+                  variant="secondary"
+                  title="결제하기"
+                  icon="left"
+                  customIcon={
+                    <CustomIcon icon="SERVER" className="w-[24px] h-[24px]" />
+                  }
+                />
+                <Button
+                  variant="primary"
+                  title="전송하기"
+                  icon="left"
+                  customIcon={
+                    <CustomIcon
+                      icon="SEND"
+                      className="w-[24px] h-[24px]"
+                      stroke={message !== "" ? "#EFEFF0" : "#94949C"}
+                    />
+                  }
+                  disabled={message === ""}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
-};
-
-export default ChatModal;
+}

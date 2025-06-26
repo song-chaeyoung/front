@@ -3,6 +3,27 @@
 const apiUrl = process.env.NEXT_API_URL;
 import { cookies } from "next/headers";
 
+export interface AuthMy {
+  id: number;
+  email: string;
+  name: string;
+  nickname: string;
+  phoneNumber: string;
+  birthDate: string;
+  favoriteGame: string;
+  role: string;
+  status: string;
+  profileImage: string;
+  sellerRating: number;
+  buyerRating: number;
+  pointBalance: number;
+  lastLoginAt: string;
+  socialProvider: string;
+  socialId: string;
+  emailVerified: boolean
+}
+
+
 export const getAuthMy = async () => {
   try {
     const cookieStore = await cookies();
@@ -24,8 +45,7 @@ export const getAuthMy = async () => {
         statusText: res.statusText,
       };
     }
-    const result = await res.json();
-
+    const result: AuthMy = await res.json();
     return { result };
   } catch (err) {
     console.log("Error details:", err);

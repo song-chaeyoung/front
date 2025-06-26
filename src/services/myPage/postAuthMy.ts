@@ -2,11 +2,12 @@
 
 import {MyPageUserInfo} from "@/services/myPage/getMyPageUserInfo";
 import {cookies} from "next/headers";
+import {AuthMy} from "@/services/auth/getAuthMy";
 
 const apiUrl = process.env.NEXT_API_URL;
 
 
-export interface MyPageUserInfoRequest {
+export interface AuthMyRequest {
     nickname: string;
     name: string;
     currentPassword: string;
@@ -18,7 +19,7 @@ export interface MyPageUserInfoRequest {
 }
 
 
-export const postMyPageUserInfo = async (form: MyPageUserInfoRequest) => {
+export const postAuthMy = async (form: AuthMyRequest) => {
     try {
         const cookieStore = await cookies();
         const accessToken = cookieStore.get("accessToken")?.value;
@@ -38,7 +39,7 @@ export const postMyPageUserInfo = async (form: MyPageUserInfoRequest) => {
             throw new Error("MyPage UserInfo Api 응답 에러");
         }
 
-        const result: MyPageUserInfo = await res.json();
+        const result: AuthMy = await res.json();
         return {result}
     } catch (err) {
         console.error(err);
