@@ -5,15 +5,17 @@ import React from "react";
 import AuctionSummaryItem from "@/components/auctions/AuctionSummaryItem";
 import AuctionContent from "@/components/auctions/detail/AuctionContent";
 import { useGetAuctionsId } from "@/hooks/fetcher/auctions/useGetAuctionsId";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useGetAuctionIdGames } from "@/hooks/fetcher/auctions/useGetAuctionIdGames";
 import { AuctionIdGame } from "@/_types/auctions/AuctionIdGame";
+import Button from "@/components/common/Button";
 
 const Page = () => {
   const pathname = usePathname();
   const nowID = pathname.split("/")[3];
   const { data } = useGetAuctionsId(nowID);
   const { data: games } = useGetAuctionIdGames(nowID);
+  const router = useRouter();
 
   if (!data?.result || !games?.result) return null;
 
@@ -36,10 +38,14 @@ const Page = () => {
             </>
           </div>
         ) : (
-          <div className="flex-center w-full h-[337px] rounded-md bg-bgGrayDepth2 flex-center overflow-hidden">
+          <div className="flex-center flex-col gap-1 w-full h-[337px] rounded-md bg-bgGrayDepth2 flex-center overflow-hidden">
             <p className="text-fgGrayDefault text-1.125 leading-[1.4] tracking-[-0.28px]">
               경매중인 아이템이 없습니다.
             </p>
+            <Button
+              title="경매 생성하러 가기"
+              onClick={() => router.push("/write")}
+            />
           </div>
         )}
       </div>

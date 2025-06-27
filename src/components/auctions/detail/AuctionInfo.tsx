@@ -30,6 +30,8 @@ const AuctionInfo = ({
 
   const currentPrice = auction?.currentPrice || data.currentPrice;
 
+  console.log(data);
+
   return (
     <>
       <p className="text-fgGrayDefault text-1.5 font-semibold leading-[1.4] tracking-[-0.48px]">
@@ -79,7 +81,7 @@ const AuctionInfo = ({
               auctionId={auctionId}
             />
           )}
-          <BidUserInfo />
+          <BidUserInfo seller={data.seller} />
         </>
       )}
       {isTablet && (
