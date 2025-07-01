@@ -9,10 +9,11 @@ interface PaginationProps {
 }
 
 
-const Pagination = ({ lastPage}: PaginationProps) => {
+const Pagination = ({lastPage}: PaginationProps) => {
     const BUTTON_STYLE = `w-8 h-8 bg-fillGrayDefault rounded-max inline-flex flex-col justify-center items-center`;
     const {isMobile} = useDeviceSize();
-    const buttonCount = isMobile ? 5 : 10;
+    const maxPage = isMobile ? 5 : 10;
+    const buttonCount = Math.min(lastPage, maxPage);
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentPage = Number(searchParams.get("pageNo")) ?? 0;

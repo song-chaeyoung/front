@@ -1,6 +1,5 @@
 "use server";
 
-// import {MyPageUserInfo} from "@/services/myPage/getMyPageUserInfo";
 import { cookies } from "next/headers";
 import { AuthMy } from "@/services/auth/getAuthMy";
 

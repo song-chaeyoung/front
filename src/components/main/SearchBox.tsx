@@ -38,7 +38,7 @@ const SearchBox = () => {
 
     return (
         <div
-            className={'flex flex-col w-full max-w-[640px] pt-[64px] pb-[128px] m-auto self-stretch items-start gap-l-1.25'}>
+            className={'flex flex-col w-full max-w-[640px] pt-[64px] pb-[192px] m-auto self-stretch items-start gap-l-1.25'}>
             <h3 className={'text-fgGrayDefault text-2 font-semibold'}>
                 경매 검색
             </h3>
